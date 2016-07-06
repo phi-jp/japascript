@@ -62,34 +62,46 @@
             var j = 0;
             var str = '';
             var ch = '';
-            while ((ch = line[j++]) != null) {
-                if (/^[＃#]/.test(ch)) {
-                    // コメント
-                    break;
-                }
-                if (/[=＝は]/.test(ch)) {
-                    var value = line.split(ch)[1];
-                    tasks.push({
-                        type: "variable",
-                        data: {
-                            key: str,
-                            value: value,
-                        },
-                    });
-                }
-                else if (/[（]/.test(ch)) {
-                    var arg = line.match(/（(.*)）/)[1];
-                    tasks.push({
-                        type: "exec",
-                        data: {
-                            name: str,
-                            arg: arg,
-                        },
-                    });
-                }
-                else {
-                    str += ch;
-                }
+            var ma = null;
+            var indent = line.match(/^[　]*/)[0].length;
+
+            if (/^[＃#]/.test(line)) {
+                // コメント
+            }
+            else if (/[=＝は]/.test(line)) {
+                var d = line.split(/[=＝は]/);
+                var key = d[0];
+                var value = d[1];
+                tasks.push({
+                    type: "variable",
+                    indent: indent,
+                    data: {
+                        key: key,
+                        value: value,
+                    }
+                });
+            }
+            else if (/[（]/.test(line)) {
+                var name = line.split(/[（]/)[0];
+                var arg = line.match(/（(.*)）/)[1];
+                tasks.push({
+                    type: "exec",
+                    indent: indent,
+                    data: {
+                        name: name.trim(),
+                        arg: arg,
+                    },
+                });
+            }
+            else if (/くりかえし/.test(line)) {
+                var count = line.match(/([０-９]+)かい/)[1];
+                tasks.push({
+                    type: "for",
+                    indent: indent,
+                    data: {
+                        count: count
+                    }
+                });
             }
         }
 
@@ -113,10 +125,19 @@
             return rst;
         };
 
+        var toMethod = function(v) {
+            return {
+                "ログ": "console.log",
+                "書く": "document.write",
+                "かく": "document.write",
+            }[v];
+        };
+
         console.log("tasks", tasks);
 
 
         var codes = [];
+        var prevTask = null;
 
         tasks.forEach(function(task) {
             var str = '';
@@ -131,13 +152,48 @@
             else if (task.type == 'exec') {
                 var d = task.data;
 
-                str = "console.log({arg})".format({
-                    key: d.key,
+                str = "{name}({arg});".format({
+                    name: toMethod(d.name),
                     arg: toVariable(d.arg),
                 });
             }
+            else if (task.type == 'for') {
+                var d = task.data;
+                var count = toVariable(d.count);
+
+                str = "for(var カウンタ=0; カウンタ<{0}; ++カウンタ)".format(count);
+            }
+
+            // インデント
+            for (var i=0,len=task.indent; i<len; ++i) {
+                str = '    ' + str;
+                console.log("hoge");
+            }
+
+            // インデントによる括弧
+            if (prevTask) {
+                // 字上げ
+                if (task.indent > prevTask.indent) {
+                    codes.push(_indent(prevTask.indent) + '{');
+                }
+                // 字下げ
+                else if (task.indent < prevTask.indent) {
+                    codes.push(_indent(task.indent) + '}');
+//                    codes.push('}');
+                }
+            }
+
+            // 追加
             codes.push(str);
+
+            // 保持
+            prevTask = task;
         });
+        
+        // インデント調整
+        for (var i=prevTask.indent; i>0; --i) {
+            codes.push(_indent(i-1) + '}')
+        }
 
         var code = codes.join('\n');
 
@@ -146,6 +202,17 @@
         console.log('-----------');
 
         return code;
+    };
+
+    var _indent = function(indent, format) {
+        format = format || '    ';
+
+        var str = '';
+        for (var i=0; i<indent; ++i) {
+            str += format;
+        }
+
+        return str;
     };
 
     var _convert = function(script) {
