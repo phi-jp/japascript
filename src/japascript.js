@@ -137,7 +137,7 @@
             }[v];
         };
 
-        console.log("tasks", tasks);
+        // console.log("tasks", tasks);
 
 
         var codes = [];
@@ -171,7 +171,6 @@
             // インデント
             for (var i=0,len=task.indent; i<len; ++i) {
                 str = '    ' + str;
-                console.log("hoge");
             }
 
             // インデントによる括弧
@@ -201,9 +200,9 @@
 
         var code = codes.join('\n');
 
-        console.log('-----------');
-        console.log(code);
-        console.log('-----------');
+        // console.log('-----------');
+        // console.log(code);
+        // console.log('-----------');
 
         return code;
     };
@@ -233,7 +232,7 @@
     };
 
     var _load = function(path, fn) {
-        console.log(path);
+        // console.log(path);
         var xhr = new XMLHttpRequest();
         xhr.open("GET", path, true);
         xhr.send(null);
