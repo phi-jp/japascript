@@ -48,7 +48,7 @@
                     });
                 }
                 else {
-                    var code = _convert(script.innerText);
+                    var code = _parse(script.innerText);
                     eval(code);
                 }
             }
@@ -129,6 +129,8 @@
 
         var toMethod = function(v) {
             return {
+                "見る": "alert",
+                "警告": "alert",
                 "ログ": "console.log",
                 "書く": "document.write",
                 "かく": "document.write",
