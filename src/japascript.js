@@ -40,15 +40,17 @@
     this.japascript = function() {
         var each = Array.prototype.forEach;
         each.call(document.scripts, function(script) {
-            if (script.type == "text/japascript" && script.src) {
-                _load(script.src, function(data) {
-                    var code = _parse(data);
+            if (script.type == "text/japascript") {
+                if (script.src) {
+                    _load(script.src, function(data) {
+                        var code = _parse(data);
+                        eval(code);
+                    });
+                }
+                else {
+                    var code = _convert(script.innerText);
                     eval(code);
-                });
-            }
-            else {
-                // var code = _convert(script.innerText);
-                // eval(code);
+                }
             }
         });
     };
